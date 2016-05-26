@@ -43,33 +43,38 @@
 #include "AnnMatch2.h"
 #endif
 
-static KpmHandle *kpmCreateHandleCore(ARParamLT *cparamLT, int xsize, int ysize, int poseMode);
+static KpmHandle *kpmCreateHandleCore( ARParamLT *cparamLT, int xsize, int ysize, int poseMode, AR_PIXEL_FORMAT pixFormat );
 
-KpmHandle *kpmCreateHandle(ARParamLT *cparamLT)
+KpmHandle *kpmCreateHandle( ARParamLT *cparamLT, AR_PIXEL_FORMAT pixFormat )
 {
-    return kpmCreateHandleCore(cparamLT, cparamLT->param.xsize, cparamLT->param.ysize, KpmPose6DOF);
+    return kpmCreateHandleCore( cparamLT, cparamLT->param.xsize, cparamLT->param.ysize, KpmPose6DOF, pixFormat);
 }
 
-KpmHandle *kpmCreateHandleHomography(int xsize, int ysize)
+KpmHandle *kpmCreateHandleHomography( int xsize, int ysize, AR_PIXEL_FORMAT pixFormat )
 {
-    return kpmCreateHandleCore(NULL, xsize, ysize, KpmPoseHomography);
+    return kpmCreateHandleCore( NULL, xsize, ysize, KpmPoseHomography, pixFormat );
 }
 
-KpmHandle *kpmCreateHandle2(int xsize, int ysize)
+KpmHandle *kpmCreateHandle2( int xsize, int ysize, AR_PIXEL_FORMAT pixFormat )
 {
-    return kpmCreateHandleCore(NULL, xsize, ysize, KpmPoseHomography);
+    return kpmCreateHandleCore( NULL, xsize, ysize, KpmPoseHomography, pixFormat );
 }
 
-static KpmHandle *kpmCreateHandleCore( ARParamLT *cparamLT, int xsize, int ysize, int poseMode)
+static KpmHandle *kpmCreateHandleCore( ARParamLT *cparamLT, int xsize, int ysize, int poseMode, AR_PIXEL_FORMAT pixFormat )
 {
     KpmHandle       *kpmHandle;
 #if !BINARY_FEATURE
     int surfXSize, surfYSize;
 #endif
     
+    if (pixFormat != AR_PIXEL_FORMAT_MONO && pixFormat != AR_PIXEL_FORMAT_420v && pixFormat != AR_PIXEL_FORMAT_420f && pixFormat != AR_PIXEL_FORMAT_NV21) {
+        ARLOGw("Performance warning: KPM processing is not using a mono pixel format.\n");
+    }
+
     arMallocClear( kpmHandle, KpmHandle, 1 );
 
 #if BINARY_FEATURE
+    //kpmHandle->freakMatcherOpencv       = new vision::VisualDatabaseOpencvFacade;
     kpmHandle->freakMatcher             = new vision::VisualDatabaseFacade;
 #else
     kpmHandle->ann2                     = NULL;
@@ -79,6 +84,7 @@ static KpmHandle *kpmCreateHandleCore( ARParamLT *cparamLT, int xsize, int ysize
     kpmHandle->poseMode                = poseMode;
     kpmHandle->xsize                   = xsize;
     kpmHandle->ysize                   = ysize;
+    kpmHandle->pixFormat               = pixFormat;
     kpmHandle->procMode                = KpmDefaultProcMode;
     kpmHandle->detectedMaxFeature      = -1;
 #if !BINARY_FEATURE
@@ -145,6 +151,12 @@ int kpmHandleGetYSize(const KpmHandle *kpmHandle)
 {
     if (!kpmHandle) return 0;
     return kpmHandle->ysize;
+}
+
+AR_PIXEL_FORMAT kpmHandleGetPixelFormat(const KpmHandle *kpmHandle)
+{
+    if (!kpmHandle) return AR_PIXEL_FORMAT_INVALID;
+    return kpmHandle->pixFormat;
 }
 
 int kpmSetProcMode( KpmHandle *kpmHandle,  KPM_PROC_MODE mode )
@@ -230,6 +242,7 @@ int kpmDeleteHandle( KpmHandle **kpmHandle )
     if( *kpmHandle == NULL ) return -1;
 
 #if BINARY_FEATURE
+    //delete (*kpmHandle)->freakMatcherOpencv;
     delete (*kpmHandle)->freakMatcher;
 #else
     CAnnMatch2  *ann2 = (CAnnMatch2 *)((*kpmHandle)->ann2);

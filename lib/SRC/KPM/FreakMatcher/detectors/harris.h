@@ -35,9 +35,9 @@
 
 #pragma once
 
-#include <cstddef>
 #include <vector>
 #include "utils/point.h"
+#include <iostream>
 
 namespace vision {
 
