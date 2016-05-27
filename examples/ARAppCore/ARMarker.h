@@ -60,10 +60,6 @@
 #import <AR/ar.h>
 #import <AR/arFilterTransMat.h>
 
-// The macro "WITH_NFT" is normally defined in build settings for projects
-// that support NFT.
-//#define WITH_NFT
-
 @class ARViewController;
 
 // Types.
@@ -136,6 +132,8 @@ extern NSString *const ARMarkerDestroyedNotification;   // Sent before marker is
 
 // Variant if using both square and NFT detection.
 + (NSMutableArray *)newMarkersFromConfigDataFile:(NSString *)markersConfigDataFilePath arPattHandle:(ARPattHandle *)arPattHandle_in arPatternDetectionMode:(int *)patternDetectionMode_out;
+
++ (NSMutableArray *)newNFTMarkers:(NSString *)markerName;
 
 // Find a marker by name from a set of markers.
 + (ARMarker *)findMarkerWithName:(NSString *)name inMarkers:(NSArray *)markers;

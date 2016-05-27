@@ -35,8 +35,8 @@
  *
  */
 
-#ifndef AR_VIDEO_CONFIG_H
-#define AR_VIDEO_CONFIG_H
+#ifndef AR_CONFIG_H
+#define AR_CONFIG_H
 
 #include <AR/config.h>
 
@@ -50,18 +50,6 @@
 #define   AR_VIDEO_V4L_DEFAULT_CHANNEL       3
 #define   AR_VIDEO_V4L_DEFAULT_MODE          AR_VIDEO_V4L_MODE_NTSC
 #endif
-
-#ifdef AR_INPUT_V4L2
-#define   AR_VIDEO_V4L2_MODE_PAL              0
-#define   AR_VIDEO_V4L2_MODE_NTSC             1
-#define   AR_VIDEO_V4L2_MODE_SECAM            2
-#define   AR_VIDEO_V4L2_DEFAULT_DEVICE        "/dev/video0"
-#define   AR_VIDEO_V4L2_DEFAULT_WIDTH         640
-#define   AR_VIDEO_V4L2_DEFAULT_HEIGHT        480
-#define   AR_VIDEO_V4L2_DEFAULT_CHANNEL       0
-#define   AR_VIDEO_V4L2_DEFAULT_MODE          AR_VIDEO_V4L2_MODE_NTSC
-#endif
-
 
 #ifdef AR_INPUT_1394CAM
 #define   AR_VIDEO_1394_MODE_320x240_YUV422            32
@@ -152,4 +140,4 @@
 #ifdef AR_INPUT_QUICKTIME
 #endif
 
-#endif // !AR_VIDEO_CONFIG_H
+#endif // !AR_CONFIG_H

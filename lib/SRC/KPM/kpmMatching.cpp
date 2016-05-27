@@ -164,6 +164,7 @@ int kpmLoadImageDb(KpmHandle *kpmHandle, const char *filename)
         }
     }
 
+    //kpmHandle->freakMatcherOpencv->addImage(image, width, height, 1);
     kpmHandle->freakMatcher->addImage(image, width, height, 1);
     free(image);
     
@@ -244,9 +245,6 @@ int kpmSetRefDataSet( KpmHandle *kpmHandle, KpmRefDataSet *refDataSet )
     if( refDataSet->pageNum > 0 ) {
         kpmHandle->resultNum = refDataSet->pageNum;
         arMalloc( kpmHandle->result, KpmResult, refDataSet->pageNum );
-		for (int i = 0; i < refDataSet->pageNum;i++){
-			kpmHandle->result[i].skipF = 0;
-		}        
     }
 
     // Create feature vectors.
@@ -278,8 +276,7 @@ int kpmSetRefDataSet( KpmHandle *kpmHandle, KpmRefDataSet *refDataSet )
                 std::vector<unsigned char> descriptors;
             
                 for (int i = 0; i < featureVector.num; i++) {
-                    if (kpmHandle->refDataSet.refPoint[i].refImageNo == kpmHandle->refDataSet.pageInfo[k].imageInfo[m].imageNo
-                    && kpmHandle->refDataSet.refPoint[i].pageNo == kpmHandle->refDataSet.pageInfo[k].pageNo) {
+                    if (kpmHandle->refDataSet.refPoint[i].refImageNo == kpmHandle->refDataSet.pageInfo[k].imageInfo[m].imageNo) {
                         points.push_back(vision::FeaturePoint(kpmHandle->refDataSet.refPoint[i].coord2D.x,
                                                           kpmHandle->refDataSet.refPoint[i].coord2D.y,
                                                           kpmHandle->refDataSet.refPoint[i].featureVec.angle,
@@ -292,7 +289,7 @@ int kpmSetRefDataSet( KpmHandle *kpmHandle, KpmRefDataSet *refDataSet )
                     }
                 }
                 ARLOGi("points-%d\n", points.size());
-               kpmHandle->pageIDs[db_id] = kpmHandle->refDataSet.pageInfo[k].pageNo; kpmHandle->freakMatcher->addFreakFeaturesAndDescriptors(points,descriptors,points_3d,kpmHandle->refDataSet.pageInfo[k].imageInfo[m].width,kpmHandle->refDataSet.pageInfo[k].imageInfo[m].height,db_id++);
+                kpmHandle->freakMatcher->addFreakFeaturesAndDescriptors(points,descriptors,points_3d,kpmHandle->refDataSet.pageInfo[k].imageInfo[m].width,kpmHandle->refDataSet.pageInfo[k].imageInfo[m].height,db_id++);
             }
         }
     }
@@ -380,16 +377,15 @@ int kpmSetMatchingSkipRegion( KpmHandle *kpmHandle, SurfSubRect *skipRegion, int
 }
 #endif
 
-int kpmMatching(KpmHandle *kpmHandle, ARUint8 *inImageLuma)
+int kpmMatching( KpmHandle *kpmHandle, ARUint8 *inImage )
 {
     int               xsize, ysize;
     int               xsize2, ysize2;
     int               procMode;
-    ARUint8          *imageLuma;
-    int               imageLumaWasAllocated;
-    int               i;
-#if !BINARY_FEATURE
+    ARUint8          *inImageBW;
     FeatureVector     featureVector;
+    int               i, j;
+#if !BINARY_FEATURE
     int              *inlierIndex;
     CorspMap          preRANSAC;
     int               inlierNum;
@@ -397,12 +393,11 @@ int kpmMatching(KpmHandle *kpmHandle, ARUint8 *inImageLuma)
     int              *annMatch2;
     int               knn;
     float             h[3][3];
-    int               j;
 #endif
     int               ret;
     
-    if (!kpmHandle || !inImageLuma) {
-        ARLOGe("kpmMatching(): NULL kpmHandle/inImageLuma.\n");
+    if (!kpmHandle || !inImage) {
+        ARLOGe("kpmMatching(): NULL kpmHandle/inImage.\n");
         return -1;
     }
     
@@ -410,18 +405,17 @@ int kpmMatching(KpmHandle *kpmHandle, ARUint8 *inImageLuma)
     ysize           = kpmHandle->ysize;
     procMode        = kpmHandle->procMode;
     
-    if (procMode == KpmProcFullSize) {
-        imageLuma = inImageLuma;
-        imageLumaWasAllocated = 0;
+    if (procMode == KpmProcFullSize && (kpmHandle->pixFormat == AR_PIXEL_FORMAT_MONO || kpmHandle->pixFormat == AR_PIXEL_FORMAT_420v || kpmHandle->pixFormat == AR_PIXEL_FORMAT_420f || kpmHandle->pixFormat == AR_PIXEL_FORMAT_NV21)) {
+        inImageBW = inImage;
     } else {
-        imageLuma = kpmUtilResizeImage(inImageLuma, xsize, ysize, procMode, &xsize2, &ysize2);
-        if (!imageLuma) return -1;
-        imageLumaWasAllocated = 1;
+        inImageBW = kpmUtilGenBWImage( inImage, kpmHandle->pixFormat, xsize, ysize, procMode, &xsize2, &ysize2 );
+        if( inImageBW == NULL ) return -1;
     }
 
 #if BINARY_FEATURE
-    kpmHandle->freakMatcher->query(imageLuma, xsize ,ysize);
-    kpmHandle->inDataSet.num = (int)kpmHandle->freakMatcher->getQueryFeaturePoints().size();
+    //kpmHandle->freakMatcherOpencv->query(inImageBW, xsize ,ysize);
+    kpmHandle->freakMatcher->query(inImageBW, xsize ,ysize);
+    kpmHandle->inDataSet.num = featureVector.num = (int)kpmHandle->freakMatcher->getQueryFeaturePoints().size();
 #else
     surfSubExtractFeaturePoint( kpmHandle->surfHandle, inImageBW, kpmHandle->skipRegion.region, kpmHandle->skipRegion.regionNum );
     kpmHandle->skipRegion.regionNum = 0;
@@ -440,6 +434,7 @@ int kpmMatching(KpmHandle *kpmHandle, ARUint8 *inImageLuma)
         arMalloc( kpmHandle->aftRANSAC.match, KpmMatchData,   kpmHandle->inDataSet.num );
 #endif
 #if BINARY_FEATURE
+        arMalloc( featureVector.sf,           FreakFeature,   kpmHandle->inDataSet.num );
 #else
         arMalloc( featureVector.sf,           SurfFeature,    kpmHandle->inDataSet.num );
         arMalloc( preRANSAC.mp,               MatchPoint,     kpmHandle->inDataSet.num );
@@ -451,13 +446,16 @@ int kpmMatching(KpmHandle *kpmHandle, ARUint8 *inImageLuma)
         
 #if BINARY_FEATURE
         const std::vector<vision::FeaturePoint>& points = kpmHandle->freakMatcher->getQueryFeaturePoints();
-        //const std::vector<unsigned char>& descriptors = kpmHandle->freakMatcher->getQueryDescriptors();
+        const std::vector<unsigned char>& descriptors = kpmHandle->freakMatcher->getQueryDescriptors();
 #endif
         if( procMode == KpmProcFullSize ) {
             for( i = 0 ; i < kpmHandle->inDataSet.num; i++ ) {
 
 #if BINARY_FEATURE
                 float  x = points[i].x, y = points[i].y;
+                for( j = 0; j < FREAK_SUB_DIMENSION; j++ ) {
+                    featureVector.sf[i].v[j] = descriptors[i*FREAK_SUB_DIMENSION+j];
+                }
 #else
                 float  x, y, *desc;
                 surfSubGetFeaturePosition( kpmHandle->surfHandle, i, &x, &y );
@@ -480,6 +478,9 @@ int kpmMatching(KpmHandle *kpmHandle, ARUint8 *inImageLuma)
             for( i = 0 ; i < kpmHandle->inDataSet.num; i++ ) {
 #if BINARY_FEATURE
                 float  x = points[i].x, y = points[i].y;
+                for( j = 0; j < FREAK_SUB_DIMENSION; j++ ) {
+                    featureVector.sf[i].v[j] = descriptors[i*FREAK_SUB_DIMENSION+j];
+                }
 #else
                 float  x, y, *desc;
                 surfSubGetFeaturePosition( kpmHandle->surfHandle, i, &x, &y );
@@ -502,6 +503,9 @@ int kpmMatching(KpmHandle *kpmHandle, ARUint8 *inImageLuma)
             for( i = 0 ; i < kpmHandle->inDataSet.num; i++ ) {
 #if BINARY_FEATURE
                 float  x = points[i].x, y = points[i].y;
+                for( j = 0; j < FREAK_SUB_DIMENSION; j++ ) {
+                    featureVector.sf[i].v[j] = descriptors[i*FREAK_SUB_DIMENSION+j];
+                }
 #else
                 float  x, y, *desc;
                 surfSubGetFeaturePosition( kpmHandle->surfHandle, i, &x, &y );
@@ -524,6 +528,9 @@ int kpmMatching(KpmHandle *kpmHandle, ARUint8 *inImageLuma)
             for( i = 0 ; i < kpmHandle->inDataSet.num; i++ ) {
 #if BINARY_FEATURE
                 float  x = points[i].x, y = points[i].y;
+                for( j = 0; j < FREAK_SUB_DIMENSION; j++ ) {
+                    featureVector.sf[i].v[j] = descriptors[i*FREAK_SUB_DIMENSION+j];
+                }
 #else
                 float  x, y, *desc;
                 surfSubGetFeaturePosition( kpmHandle->surfHandle, i, &x, &y );
@@ -546,6 +553,9 @@ int kpmMatching(KpmHandle *kpmHandle, ARUint8 *inImageLuma)
             for( i = 0 ; i < kpmHandle->inDataSet.num; i++ ) {
 #if BINARY_FEATURE
                 float  x = points[i].x, y = points[i].y;
+                for( j = 0; j < FREAK_SUB_DIMENSION; j++ ) {
+                    featureVector.sf[i].v[j] = descriptors[i*FREAK_SUB_DIMENSION+j];
+                }
 #else
                 float  x, y, *desc;
                 surfSubGetFeaturePosition( kpmHandle->surfHandle, i, &x, &y );
@@ -652,13 +662,12 @@ int kpmMatching(KpmHandle *kpmHandle, ARUint8 *inImageLuma)
             if( ret == 0 ) {
                 kpmHandle->result[pageLoop].camPoseF = 0;
                 kpmHandle->result[pageLoop].inlierNum = (int)matches.size();
-                kpmHandle->result[pageLoop].pageNo = kpmHandle->pageIDs[matched_image_id];
                 ARLOGi("Page[%d]  pre:%3d, aft:%3d, error = %f\n", pageLoop, (int)matches.size(), (int)matches.size(), kpmHandle->result[pageLoop].error);
             }
         }
 #endif
-#if !BINARY_FEATURE
         free(featureVector.sf);
+#if !BINARY_FEATURE
         free(preRANSAC.mp);
         free(inlierIndex);
 #endif
@@ -675,7 +684,7 @@ int kpmMatching(KpmHandle *kpmHandle, ARUint8 *inImageLuma)
     
     for( i = 0; i < kpmHandle->resultNum; i++ ) kpmHandle->result[i].skipF = 0;
 
-    if (imageLumaWasAllocated) free(imageLuma);
+    if (inImageBW != inImage) free( inImageBW );
     
     return 0;
 }
@@ -788,7 +797,7 @@ int kpmUtilGetPose_binary(ARParamLT *cparamLT, const vision::matches_t &matchDat
     free( wCoord );
     
     *error = (float)err;
-    if( *error > 10.0f ) return -1;
+    //if( *error > 10.0f ) return -1;
     
     return 0;
 }

@@ -96,9 +96,6 @@ static int ar2VideoGetDeviceWithConfig(const char *config, const char **configSt
             else if( strcmp( b, "-device=LinuxV4L" ) == 0 )     {
                 device = AR_VIDEO_DEVICE_V4L;
             }
-            else if( strcmp( b, "-device=LinuxV4L2" ) == 0 )     {
-                device = AR_VIDEO_DEVICE_V4L2;
-            }
             else if( strcmp( b, "-device=LinuxDV" ) == 0 )      {
                 device = AR_VIDEO_DEVICE_DV;
             }
@@ -170,11 +167,6 @@ ARVideoSourceInfoListT *ar2VideoCreateSourceInfoList(const char *config_in)
 #endif
 #ifdef AR_INPUT_V4L
     if (device == AR_VIDEO_DEVICE_V4L) {
-        return (NULL);
-    }
-#endif
-#ifdef AR_INPUT_V4L2
-    if (device == AR_VIDEO_DEVICE_V4L2) {
         return (NULL);
     }
 #endif
@@ -275,7 +267,7 @@ AR2VideoParamT *ar2VideoOpen( const char *config_in )
     // only the portion following that option to them.
     const char                *configStringFollowingDevice = NULL;
 
-    arMallocClear( vid, AR2VideoParamT, 1 );
+    arMalloc( vid, AR2VideoParamT, 1 );
     config = ar2VideoGetConfig(config_in);
     vid->deviceType = ar2VideoGetDeviceWithConfig(config, &configStringFollowingDevice);
 
@@ -291,13 +283,6 @@ AR2VideoParamT *ar2VideoOpen( const char *config_in )
         if( (vid->device.v4l = ar2VideoOpenV4L(config)) != NULL ) return vid;
 #else
         ARLOGe("ar2VideoOpen: Error: device \"LinuxV4L\" not supported on this build/architecture/system.\n");
-#endif
-    }
-    if( vid->deviceType == AR_VIDEO_DEVICE_V4L2 ) {
-#ifdef AR_INPUT_V4L2
-        if( (vid->device.v4l2 = ar2VideoOpenV4L2(config)) != NULL ) return vid;
-#else
-        ARLOGe("ar2VideoOpen: Error: device \"LinuxV4L2\" not supported on this build/architecture/system.\n");
 #endif
     }
     if( vid->deviceType == AR_VIDEO_DEVICE_DV ) {
@@ -411,7 +396,7 @@ AR2VideoParamT *ar2VideoOpenAsync(const char *config_in, void (*callback)(void *
     // only the portion following that option to them.
     const char                *configStringFollowingDevice = NULL;
     
-    arMallocClear( vid, AR2VideoParamT, 1 );
+    arMalloc( vid, AR2VideoParamT, 1 );
     config = ar2VideoGetConfig(config_in);
     vid->deviceType = ar2VideoGetDeviceWithConfig(config, &configStringFollowingDevice);
     
@@ -435,11 +420,6 @@ int ar2VideoClose( AR2VideoParamT *vid )
     int ret;
     
     if (!vid) return -1;
-    if (vid->lumaInfo) {
-        if (arVideoLumaFinal(&(vid->lumaInfo)) < 0) {
-            ARLOGe("ar2VideoClose: Error disposing of luma info.\n");
-        }
-    }
     ret = -1;
 #ifdef AR_INPUT_DUMMY
     if( vid->deviceType == AR_VIDEO_DEVICE_DUMMY ) {
@@ -449,11 +429,6 @@ int ar2VideoClose( AR2VideoParamT *vid )
 #ifdef AR_INPUT_V4L
     if( vid->deviceType == AR_VIDEO_DEVICE_V4L ) {
         ret = ar2VideoCloseV4L( vid->device.v4l );
-    }
-#endif
-#ifdef AR_INPUT_V4L2
-    if( vid->deviceType == AR_VIDEO_DEVICE_V4L2 ) {
-        ret = ar2VideoCloseV4L2( vid->device.v4l2 );
     }
 #endif
 #ifdef AR_INPUT_DV
@@ -541,11 +516,6 @@ int ar2VideoDispOption( AR2VideoParamT *vid )
 #ifdef AR_INPUT_V4L
     if( vid->deviceType == AR_VIDEO_DEVICE_V4L ) {
         return ar2VideoDispOptionV4L();
-    }
-#endif
-#ifdef AR_INPUT_V4L2
-    if( vid->deviceType == AR_VIDEO_DEVICE_V4L2 ) {
-        return ar2VideoDispOptionV4L2();
     }
 #endif
 #ifdef AR_INPUT_DV
@@ -640,11 +610,6 @@ int ar2VideoGetId( AR2VideoParamT *vid, ARUint32 *id0, ARUint32 *id1 )
         return ar2VideoGetIdV4L( vid->device.v4l, id0, id1 );
     }
 #endif
-#ifdef AR_INPUT_V4L2
-    if( vid->deviceType == AR_VIDEO_DEVICE_V4L2 ) {
-        return ar2VideoGetIdV4L2( vid->device.v4l2, id0, id1 );
-    }
-#endif
 #ifdef AR_INPUT_DV
     if( vid->deviceType == AR_VIDEO_DEVICE_DV ) {
         return ar2VideoGetIdDv( vid->device.dv, id0, id1 );
@@ -729,11 +694,6 @@ int ar2VideoGetSize(AR2VideoParamT *vid, int *x,int *y)
 #ifdef AR_INPUT_V4L
     if( vid->deviceType == AR_VIDEO_DEVICE_V4L ) {
         return ar2VideoGetSizeV4L( vid->device.v4l, x, y );
-    }
-#endif
-#ifdef AR_INPUT_V4L2
-    if( vid->deviceType == AR_VIDEO_DEVICE_V4L2 ) {
-        return ar2VideoGetSizeV4L2( vid->device.v4l2, x, y );
     }
 #endif
 #ifdef AR_INPUT_DV
@@ -827,11 +787,6 @@ AR_PIXEL_FORMAT ar2VideoGetPixelFormat( AR2VideoParamT *vid )
         return ar2VideoGetPixelFormatV4L( vid->device.v4l );
     }
 #endif
-#ifdef AR_INPUT_V4L2
-    if( vid->deviceType == AR_VIDEO_DEVICE_V4L2 ) {
-        return ar2VideoGetPixelFormatV4L2( vid->device.v4l2 );
-    }
-#endif
 #ifdef AR_INPUT_DV
     if( vid->deviceType == AR_VIDEO_DEVICE_DV ) {
         return ar2VideoGetPixelFormatDv( vid->device.dv );
@@ -907,83 +862,76 @@ AR_PIXEL_FORMAT ar2VideoGetPixelFormat( AR2VideoParamT *vid )
 
 AR2VideoBufferT *ar2VideoGetImage( AR2VideoParamT *vid )
 {
-    AR2VideoBufferT *ret = NULL;
-    
     if (!vid) return (NULL);
 #ifdef AR_INPUT_DUMMY
     if( vid->deviceType == AR_VIDEO_DEVICE_DUMMY ) {
-        ret = ar2VideoGetImageDummy( vid->device.dummy );
+        return ar2VideoGetImageDummy( vid->device.dummy );
     }
 #endif
 #ifdef AR_INPUT_V4L
     if( vid->deviceType == AR_VIDEO_DEVICE_V4L ) {
-        ret = ar2VideoGetImageV4L( vid->device.v4l );
-    }
-#endif
-#ifdef AR_INPUT_V4L2
-    if( vid->deviceType == AR_VIDEO_DEVICE_V4L2 ) {
-        ret = ar2VideoGetImageV4L2( vid->device.v4l2 );
+        return ar2VideoGetImageV4L( vid->device.v4l );
     }
 #endif
 #ifdef AR_INPUT_DV
     if( vid->deviceType == AR_VIDEO_DEVICE_DV ) {
-        ret = ar2VideoGetImageDv( vid->device.dv );
+        return ar2VideoGetImageDv( vid->device.dv );
     }
 #endif
 #ifdef AR_INPUT_1394CAM
     if( vid->deviceType == AR_VIDEO_DEVICE_1394CAM ) {
-        ret = ar2VideoGetImage1394( vid->device.cam1394 );
+        return ar2VideoGetImage1394( vid->device.cam1394 );
     }
 #endif
 #ifdef AR_INPUT_GSTREAMER
     if( vid->deviceType == AR_VIDEO_DEVICE_GSTREAMER ) {
-        ret = ar2VideoGetImageGStreamer( vid->device.gstreamer );
+        return ar2VideoGetImageGStreamer( vid->device.gstreamer );
     }
 #endif
 #ifdef AR_INPUT_SGI
     if( vid->deviceType == AR_VIDEO_DEVICE_SGI ) {
-        ret = ar2VideoGetImageSGI( vid->device.sgi );
+        return ar2VideoGetImageSGI( vid->device.sgi );
     }
 #endif
 #ifdef AR_INPUT_WINDOWS_DIRECTSHOW
     if( vid->deviceType == AR_VIDEO_DEVICE_WINDOWS_DIRECTSHOW ) {
-        ret = ar2VideoGetImageWinDS( vid->device.winDS );
+        return ar2VideoGetImageWinDS( vid->device.winDS );
     }
 #endif
 #ifdef AR_INPUT_WINDOWS_DSVIDEOLIB
     if( vid->deviceType == AR_VIDEO_DEVICE_WINDOWS_DSVIDEOLIB ) {
-        ret = ar2VideoGetImageWinDSVL( vid->device.winDSVL );
+        return ar2VideoGetImageWinDSVL( vid->device.winDSVL );
     }
 #endif
 #ifdef AR_INPUT_WINDOWS_DRAGONFLY
     if( vid->deviceType == AR_VIDEO_DEVICE_WINDOWS_DRAGONFLY ) {
-        ret = ar2VideoGetImageWinDF( vid->device.winDF );
+        return ar2VideoGetImageWinDF( vid->device.winDF );
     }
 #endif
 #ifdef AR_INPUT_QUICKTIME
     if( vid->deviceType == AR_VIDEO_DEVICE_QUICKTIME ) {
-        ret = ar2VideoGetImageQuickTime( vid->device.quickTime );
+        return ar2VideoGetImageQuickTime( vid->device.quickTime );
     }
 #endif
 #ifdef AR_INPUT_IPHONE
     if( vid->deviceType == AR_VIDEO_DEVICE_IPHONE ) {
-        ret = ar2VideoGetImageiPhone( vid->device.iPhone );
+        return ar2VideoGetImageiPhone( vid->device.iPhone );
     }
 #endif
 #ifdef AR_INPUT_QUICKTIME7
     if( vid->deviceType == AR_VIDEO_DEVICE_QUICKTIME7 ) {
-        ret = ar2VideoGetImageQuickTime7( vid->device.quickTime7 );
+        return ar2VideoGetImageQuickTime7( vid->device.quickTime7 );
     }
 #endif
 #ifdef AR_INPUT_IMAGE
     if( vid->deviceType == AR_VIDEO_DEVICE_IMAGE ) {
-        ret = ar2VideoGetImageImage( vid->device.image );
+        return ar2VideoGetImageImage( vid->device.image );
     }
 #endif
 #ifdef AR_INPUT_ANDROID
     if( vid->deviceType == AR_VIDEO_DEVICE_ANDROID ) {
 #  if AR_VIDEO_ANDROID_ENABLE_NATIVE_CAMERA
-        ret = ar2VideoGetImageAndroid( vid->device.android );
+        return ar2VideoGetImageAndroid( vid->device.android );
 #  else
         return (NULL); // NOT IMPLEMENTED.
 #  endif
@@ -991,43 +939,15 @@ AR2VideoBufferT *ar2VideoGetImage( AR2VideoParamT *vid )
 #endif
 #ifdef AR_INPUT_WINDOWS_MEDIA_FOUNDATION
     if( vid->deviceType == AR_VIDEO_DEVICE_WINDOWS_MEDIA_FOUNDATION ) {
-        ret = ar2VideoGetImageWinMF( vid->device.winMF );
+        return ar2VideoGetImageWinMF( vid->device.winMF );
     }
 #endif
 #ifdef AR_INPUT_WINDOWS_MEDIA_CAPTURE
     if( vid->deviceType == AR_VIDEO_DEVICE_WINDOWS_MEDIA_CAPTURE ) {
-        ret = ar2VideoGetImageWinMC( vid->device.winMC );
+        return ar2VideoGetImageWinMC( vid->device.winMC );
     }
 #endif
-    if (ret) {
-        // Do a conversion to luma-only if the video module didn't provide one.
-        if (!ret->buffLuma) {
-            AR_PIXEL_FORMAT pixFormat;
-            pixFormat = ar2VideoGetPixelFormat(vid);
-            if (pixFormat == AR_PIXEL_FORMAT_INVALID) {
-                ARLOGe("ar2VideoGetImage: Error: unable to get pixel format.\n");
-                return (NULL);
-            }
-            if (pixFormat == AR_PIXEL_FORMAT_MONO || pixFormat == AR_PIXEL_FORMAT_420f || pixFormat == AR_PIXEL_FORMAT_420v || pixFormat == AR_PIXEL_FORMAT_NV21) {
-                ret->buffLuma = ret->buff;
-            } else {
-                if (!vid->lumaInfo) {
-                    int xsize, ysize;
-                    if (ar2VideoGetSize(vid, &xsize, &ysize) < 0) {
-                        ARLOGe("ar2VideoGetImage: Error: unable to get size.\n");
-                        return (NULL);
-                    }
-                    vid->lumaInfo = arVideoLumaInit(xsize, ysize, pixFormat);
-                    if (!vid->lumaInfo) {
-                        ARLOGe("ar2VideoGetImage: Error: unable to initialise luma conversion.\n");
-                        return (NULL);
-                    }
-                }
-                ret->buffLuma = arVideoLuma(vid->lumaInfo, ret->buff);
-            }
-        }
-    }
-    return (ret);
+    return (NULL);
 }
 
 int ar2VideoCapStart( AR2VideoParamT *vid )
@@ -1041,11 +961,6 @@ int ar2VideoCapStart( AR2VideoParamT *vid )
 #ifdef AR_INPUT_V4L
     if( vid->deviceType == AR_VIDEO_DEVICE_V4L ) {
         return ar2VideoCapStartV4L( vid->device.v4l );
-    }
-#endif
-#ifdef AR_INPUT_V4L2
-    if( vid->deviceType == AR_VIDEO_DEVICE_V4L2 ) {
-        return ar2VideoCapStartV4L2( vid->device.v4l2 );
     }
 #endif
 #ifdef AR_INPUT_DV
@@ -1153,11 +1068,6 @@ int ar2VideoCapStop( AR2VideoParamT *vid )
         return ar2VideoCapStopV4L( vid->device.v4l );
     }
 #endif
-#ifdef AR_INPUT_V4L2
-    if( vid->deviceType == AR_VIDEO_DEVICE_V4L2 ) {
-        return ar2VideoCapStopV4L2( vid->device.v4l2 );
-    }
-#endif
 #ifdef AR_INPUT_DV
     if( vid->deviceType == AR_VIDEO_DEVICE_DV ) {
         return ar2VideoCapStopDv( vid->device.dv );
@@ -1263,11 +1173,6 @@ int ar2VideoGetParami( AR2VideoParamT *vid, int paramName, int *value )
         return ar2VideoGetParamiV4L( vid->device.v4l, paramName, value );
     }
 #endif
-#ifdef AR_INPUT_V4L2
-    if( vid->deviceType == AR_VIDEO_DEVICE_V4L2 ) {
-        return ar2VideoGetParamiV4L2( vid->device.v4l2, paramName, value );
-    }
-#endif
 #ifdef AR_INPUT_DV
     if( vid->deviceType == AR_VIDEO_DEVICE_DV ) {
         return ar2VideoGetParamiDv( vid->device.dv, paramName, value );
@@ -1352,11 +1257,6 @@ int ar2VideoSetParami( AR2VideoParamT *vid, int paramName, int  value )
 #ifdef AR_INPUT_V4L
     if( vid->deviceType == AR_VIDEO_DEVICE_V4L ) {
         return ar2VideoSetParamiV4L( vid->device.v4l, paramName, value );
-    }
-#endif
-#ifdef AR_INPUT_V4L2
-    if( vid->deviceType == AR_VIDEO_DEVICE_V4L2 ) {
-        return ar2VideoSetParamiV4L2( vid->device.v4l2, paramName, value );
     }
 #endif
 #ifdef AR_INPUT_DV
@@ -1445,11 +1345,6 @@ int ar2VideoGetParamd( AR2VideoParamT *vid, int paramName, double *value )
         return ar2VideoGetParamdV4L( vid->device.v4l, paramName, value );
     }
 #endif
-#ifdef AR_INPUT_V4L2
-    if( vid->deviceType == AR_VIDEO_DEVICE_V4L2 ) {
-        return ar2VideoGetParamdV4L2( vid->device.v4l2, paramName, value );
-    }
-#endif
 #ifdef AR_INPUT_DV
     if( vid->deviceType == AR_VIDEO_DEVICE_DV ) {
         return ar2VideoGetParamdDv( vid->device.dv, paramName, value );
@@ -1534,11 +1429,6 @@ int ar2VideoSetParamd( AR2VideoParamT *vid, int paramName, double  value )
 #ifdef AR_INPUT_V4L
     if( vid->deviceType == AR_VIDEO_DEVICE_V4L ) {
         return ar2VideoSetParamdV4L( vid->device.v4l, paramName, value );
-    }
-#endif
-#ifdef AR_INPUT_V4L2
-    if( vid->deviceType == AR_VIDEO_DEVICE_V4L2 ) {
-        return ar2VideoSetParamdV4L2( vid->device.v4l2, paramName, value );
     }
 #endif
 #ifdef AR_INPUT_DV
@@ -1785,11 +1675,6 @@ int ar2VideoGetCParam(AR2VideoParamT *vid, ARParam *cparam)
 int ar2VideoGetCParamAsync(AR2VideoParamT *vid, void (*callback)(const ARParam *, void *), void *userdata)
 {
     if (!vid) return -1;
-#ifdef AR_INPUT_IPHONE
-    if( vid->deviceType == AR_VIDEO_DEVICE_IPHONE ) {
-        return ar2VideoGetCParamAsynciPhone( vid->device.iPhone, callback, userdata);
-    }
-#endif
 #ifdef AR_INPUT_ANDROID
     if( vid->deviceType == AR_VIDEO_DEVICE_ANDROID ) {
         return ar2VideoGetCParamAsyncAndroid( vid->device.android, callback, userdata);

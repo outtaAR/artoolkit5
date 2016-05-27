@@ -307,15 +307,16 @@ static const NSString *observingContext;
                     NSLog(@"Failed to set session category: %@", error);
                     error = nil;
                 }
-                
-                OSStatus propertySetError = 0;
-                UInt32 allowMixing = true;
-                propertySetError = AudioSessionSetProperty(kAudioSessionProperty_OverrideCategoryMixWithOthers,
-                                                           sizeof (allowMixing),
-                                                           &allowMixing);
-                if (propertySetError) {
-                    NSLog(@"Error setting override.");
+
+                [session setCategory:AVAudioSessionCategoryPlayback
+                         withOptions:AVAudioSessionCategoryOptionMixWithOthers
+                               error:&error];
+
+                if (error) {
+                    NSLog(@"Error setting override: %@", error);
+                    error = nil;
                 }
+
                 inited = TRUE;
             }
         }

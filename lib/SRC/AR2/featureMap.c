@@ -250,10 +250,6 @@ AR2FeatureMapT *ar2GenFeatureMap( AR2ImageT *image,
         *(fp++) = 1.0f;
         fp2++;
     }
-  	for (i = 0; i < xsize; i++) {
-  		*(fp++) = 1.0f;
-  		fp2++;
-  	}
     ARLOGi("\n");
     free(fimage2);
     free(template);

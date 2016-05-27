@@ -251,7 +251,7 @@ extern NSString *const CameraVideoiOSDeviceAppleTVX; // "Apple TV (Unknown model
 - (void) stop;
 - (void) dealloc;
 
-
+- (void)startSession;
 
 
 

@@ -120,7 +120,7 @@ NSString *const ARViewTouchNotification = @"ARViewTouchNotification";
         // One-time OpenGL setup goes here.
         glStateCacheFlush();
         
-        BOOL ok = CHECK_GL_ERROR();
+        CHECK_GL_ERROR();
     }
     
     return (self);

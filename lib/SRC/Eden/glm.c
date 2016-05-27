@@ -603,7 +603,7 @@ glmFirstPass(GLMmodel* model, FILE* file, const int contextIndex, const GLboolea
     GLuint       numnormals = 0;     /* number of normals in model */
     GLuint       numtexcoords = 0;   /* number of texcoords in model */
     GLuint       numtriangles = 0;   /* number of triangles in model */
-    GLMgroup*    group;              /* current group */
+    GLMgroup*    group = NULL;              /* current group */
     char*        groupName;
     char*        groupNamePrev;
     GLuint       material;
@@ -767,7 +767,7 @@ glmSecondPass(GLMmodel* model, FILE* file)
     GLfloat*    vertices;			/* array of vertices  */
     GLfloat*    normals;			/* array of normals */
     GLfloat*    texcoords;			/* array of texture coordinates */
-    GLMgroup*	group;				/* current group pointer */
+    GLMgroup*	group = NULL;				/* current group pointer */
     char*       groupName;
     char*       groupNamePrev;
     GLuint      material;
@@ -2272,7 +2272,7 @@ GLubyte*
 glmReadPPM(const char* filename, int* width, int* height)
 {
     FILE* fp;
-    int i, w, h, d;
+    int i, w = 0, h = 0, d;
     unsigned char* image;
     char head[70];          /* max line <= 70 in PPM (per spec). */
 

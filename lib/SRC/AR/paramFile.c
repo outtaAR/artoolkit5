@@ -266,7 +266,7 @@ int arParamLoad( const char *filename, int num, ARParam *param, ...)
     int      i = 0;
     va_list  ap;
     ARParam  *param1;
-    int      dist_function_version;
+    int      dist_function_version = 0;
     long     flen;
     ARParamd param_wasRead;
     double   temp;
@@ -368,7 +368,7 @@ done:
 int    arParamLoadFromBuffer( const void *buffer, size_t bufsize, ARParam *param)
 {
     int         i;
-    int         dist_function_version;
+    int         dist_function_version = 0;
 	ARParamd	param_wasRead;
 	double		temp;
     

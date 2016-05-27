@@ -79,7 +79,7 @@ int arMatrixSelfInv(ARMat *m)
 static ARdouble *minv( ARdouble *ap, int dimen, int rowa )
 {
         ARdouble *wap, *wcp, *wbp;/* work pointer                 */
-        int i,j,n,ip,nwork;
+        int i,j,n,ip = 0,nwork;
         int nos[500];
         ARdouble epsl;
         ARdouble p,pbuf,work;

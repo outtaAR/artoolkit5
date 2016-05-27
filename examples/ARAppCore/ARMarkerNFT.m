@@ -50,8 +50,6 @@
 
 #import "ARViewController.h"
 
-#ifdef WITH_NFT
-
 #import <stdio.h>
 
 @implementation ARMarkerNFT {
@@ -65,14 +63,12 @@
 - (id) initWithNFTDataSetPathname:(const char *)pathname_in
 {
     if (!pathname_in || !pathname_in[0]) return (nil);
-    
     if ((self = [super init])) {
         pageNo = -1;
         pathname = strdup(pathname_in);
         
         // Load AR2 data.
         if ((surfaceSet = ar2ReadSurfaceSet(pathname_in, "fset", NULL)) == NULL) {
-            NSLog(@"Error reading data from %s.fset", pathname_in);
             [self release];
             return (nil);
         }
@@ -124,5 +120,3 @@
     return [NSString stringWithFormat:@"ARMarker NFT %p\n  datasetPathname: %s\n  pageNo: %d\n", self, pathname, pageNo];
 }
 @end
-
-#endif // WITH_NFT

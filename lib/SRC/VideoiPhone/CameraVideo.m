@@ -425,6 +425,12 @@ bail0:
     return;
 }
 
+- (void)startSession {
+    if (captureSession && !captureSession.running) {
+        [captureSession performSelector:@selector(startRunning) withObject:nil afterDelay:0.1];
+    }
+}
+
 - (void)captureOutput:(AVCaptureOutput *)captureOutput didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer fromConnection:(AVCaptureConnection *)connection
 {
     //NSLog(@"captureOutput");

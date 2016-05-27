@@ -122,6 +122,10 @@ namespace vision {
     int VisualDatabaseFacade::matchedId(){
         return mVisualDbImpl->mVdb->matchedId();
     }
+
+    void VisualDatabaseFacade::setThreshold(float threshold, float delta) {
+        mVisualDbImpl->mVdb->setThreshold(threshold, delta);
+    }
     
     const float* VisualDatabaseFacade::matchedGeometry(){
         return mVisualDbImpl->mVdb->matchedGeometry();

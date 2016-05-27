@@ -130,7 +130,7 @@ static unsigned char *RawImageRead(const char *imageFile, int *w, int *h, int *n
     unsigned char *fileContents;
     rawImageHeader *header;
     uint32_t tableLength;
-    uint32_t *rowOffsetsTable;
+    uint32_t *rowOffsetsTable = NULL;
     uint32_t *rowLengthsTable;
     unsigned char **rows;
     unsigned char *data;

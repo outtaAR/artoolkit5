@@ -164,17 +164,23 @@ namespace vision {
         inline void setMinNumInliers(size_t n) { mMinNumInliers = n; }
         inline size_t minNumInliers() const { return mMinNumInliers; }
         
+        inline void setThreshold(float threshold, float delta) {
+            mHomographyInlierThreshold = threshold;
+            mHoughBinDelta = delta;
+        }
+        
     private:
         
         size_t mMinNumInliers;
         float mHomographyInlierThreshold;
+        float mHoughBinDelta;
         
         // Set to true if the feature index is enabled
         bool mUseFeatureIndex;
         
         matches_t mMatchedInliers;
         id_t mMatchedId;
-        float mMatchedGeometry[9];
+        float mMatchedGeometry[12];
         
         keyframe_ptr_t mQueryKeyframe;
     
@@ -326,10 +332,11 @@ namespace vision {
      */
     inline void FindHoughMatches(matches_t& out_matches,
                                  const HoughSimilarityVoting& hough,
+                                 const std::vector<FeaturePoint>& p1,
+                                 const std::vector<FeaturePoint>& p2,
                                  const matches_t& in_matches,
                                  int binIndex,
                                  float binDelta) {
-        
         float dx, dy, dangle, dscale;
         int bin_x, bin_y, bin_angle, bin_scale;
         hough.getBinsFromIndex(bin_x, bin_y, bin_angle, bin_scale, binIndex);
@@ -360,6 +367,7 @@ namespace vision {
                                    const std::vector<FeaturePoint>& p1,
                                    const std::vector<FeaturePoint>& p2,
                                    const matches_t& matches,
+                                   float threshold,
                                    RobustHomography<float>& estimator,
                                    int refWidth,
                                    int refHeight) {

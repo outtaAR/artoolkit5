@@ -67,6 +67,7 @@ namespace vision {
         mDetector.setMaxNumFeaturePoints(kMaxNumFeatures);
         
         mHomographyInlierThreshold = kHomographyInlierThreshold;
+        mHoughBinDelta = kHoughBinDelta;
         mMinNumInliers = kMinNumInliers;
         
         mUseFeatureIndex = kUseFeatureIndex;
@@ -225,9 +226,11 @@ namespace vision {
             TIMED("Find Hough Matches (1)") {
                 FindHoughMatches(hough_matches,
                                  mHoughSimilarityVoting,
+                                 query_points,
+                                 ref_points,
                                  mMatcher.matches(),
                                  max_hough_index,
-                                 kHoughBinDelta);
+                                 mHoughBinDelta);
             }
             
             //
@@ -240,6 +243,7 @@ namespace vision {
                                        query_points,
                                        ref_points,
                                        hough_matches,
+                                       mHomographyInlierThreshold,
                                        mRobustHomography,
                                        it->second->width(),
                                        it->second->height())) {
@@ -293,9 +297,11 @@ namespace vision {
             TIMED("Find Hough Matches (2)") {
                 FindHoughMatches(hough_matches,
                                  mHoughSimilarityVoting,
+                                 query_points,
+                                 ref_points,
                                  mMatcher.matches(),
                                  max_hough_index,
-                                 kHoughBinDelta);
+                                 mHoughBinDelta);
             }
             
             //
@@ -307,6 +313,7 @@ namespace vision {
                                        query_points,
                                        ref_points,
                                        hough_matches,
+                                       mHomographyInlierThreshold,
                                        mRobustHomography,
                                        it->second->width(),
                                        it->second->height())) {

@@ -61,7 +61,6 @@
 #import <AR/gsub_es.h>
 #import "ARView.h"
 #import "../ARAppCore/ARMarker.h"
-#import "../ARAppCore/VirtualEnvironment.h"
 #import <AR/sys/CameraVideo.h>
 
 #import <pthread.h>
@@ -70,20 +69,45 @@
 #import <KPM/kpm.h>
 
 #define PAGES_MAX 10
+#define VIEW_DISTANCE_MIN        5.0f          // Objects closer to the camera than this will not be displayed.
+#define VIEW_DISTANCE_MAX        2000.0f        // Objects further away from the camera than this will not be displayed.
 
 @interface ARViewController : UIViewController <CameraVideoTookPictureDelegate> {
+@protected
+    BOOL            running;
+    BOOL            videoAsync;
+
+    // Marker detection.
+    long            gCallCountMarkerDetect;
+
+    // Video acquisition
+    AR2VideoParamT *gVid;
+    
+    // Markers.
+    NSMutableArray *markers;
+
+    // Drawing.
+    ARGL_CONTEXT_SETTINGS_REF arglContextSettings;
+    ARView         *glView;
+    ARParamLT      *gCparamLT;
+
+    // NFT.
+    THREAD_HANDLE_T     *threadHandle;
+    AR2SurfaceSetT      *surfaceSet[PAGES_MAX]; // Weak-reference. Strong reference is now in ARMarkerNFT class.
+    KpmHandle           *kpmHandle;
+    AR2HandleT          *ar2Handle;
 }
 
 - (IBAction)start;
 - (IBAction)stop;
 - (void) processFrame:(AR2VideoBufferT *)buffer;
+- (void) startRunLoop;
 
 // Markers.
 @property (readonly) NSMutableArray *markers;
 
 // Drawing.
 @property (readonly) ARView *glView;
-@property (nonatomic, retain) VirtualEnvironment *virtualEnvironment;
 @property (readonly) ARGL_CONTEXT_SETTINGS_REF arglContextSettings;
 
 @property (readonly, nonatomic, getter=isRunning) BOOL running;

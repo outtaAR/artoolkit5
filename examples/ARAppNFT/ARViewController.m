@@ -51,58 +51,29 @@
 #import "../ARAppCore/ARMarkerNFT.h"
 #import "../ARAppCore/trackingSub.h"
 
-#define VIEW_DISTANCE_MIN        5.0f          // Objects closer to the camera than this will not be displayed.
-#define VIEW_DISTANCE_MAX        2000.0f        // Objects further away from the camera than this will not be displayed.
-
-
 //
 // ARViewController
 //
 
 @interface ARViewController (ARViewControllerPrivate)
 - (void) loadNFTData;
-- (void) startRunLoop;
 - (void) stopRunLoop;
 - (void) setRunLoopInterval:(NSInteger)interval;
 - (void) mainLoop;
 @end
 
 @implementation ARViewController {
-    
-    BOOL            running;
     NSInteger       runLoopInterval;
     NSTimeInterval  runLoopTimePrevious;
     BOOL            videoPaused;
-    BOOL            videoAsync;
     CADisplayLink  *runLoopDisplayLink; // For non-async video.
-    
-    // Video acquisition
-    AR2VideoParamT *gVid;
-    
-    // Marker detection.
-    long            gCallCountMarkerDetect;
-    
-    // Markers.
-    NSMutableArray *markers;
-    
-    // Drawing.
-    ARParamLT      *gCparamLT;
-    ARView         *glView;
-    VirtualEnvironment *virtualEnvironment;
-    ARGL_CONTEXT_SETTINGS_REF arglContextSettings;
-    
-    // NFT.
-    THREAD_HANDLE_T     *threadHandle;
-    AR2HandleT          *ar2Handle;
-    KpmHandle           *kpmHandle;
-    AR2SurfaceSetT      *surfaceSet[PAGES_MAX]; // Weak-reference. Strong reference is now in ARMarkerNFT class.
-    
+
     // NFT results.
     int detectedPage; // -2 Tracking not inited, -1 tracking inited OK, >= 0 tracking online on page.
     float trackingTrans[3][4];
 }
 
-@synthesize glView, virtualEnvironment, markers;
+@synthesize glView, markers;
 @synthesize arglContextSettings;
 @synthesize running, runLoopInterval;
 
@@ -118,7 +89,7 @@
 
 - (void)loadView
 {
-    self.wantsFullScreenLayout = YES;
+    //self.wantsFullScreenLayout = YES;
     
     // This will be overlaid with the actual AR view.
     NSString *irisImage = nil;
@@ -143,7 +114,6 @@
     
     // Init instance variables.
     glView = nil;
-    virtualEnvironment = nil;
     markers = nil;
     gVid = NULL;
     gCparamLT = NULL;
@@ -155,12 +125,6 @@
     videoAsync = FALSE;
     
     detectedPage   = -2;
-}
-
-- (void)viewDidAppear:(BOOL)animated
-{
-    [super viewDidAppear:animated];
-    [self start];
 }
 
 // On iOS 6.0 and later, we must explicitly report which orientations this view controller supports.
@@ -317,7 +281,7 @@ static void startCallback(void *userData)
     //
     
     // KPM init.
-    kpmHandle = kpmCreateHandle(gCparamLT);
+    kpmHandle = kpmCreateHandle(gCparamLT, pixFormat);
     if (!kpmHandle) {
         NSLog(@"Error: kpmCreateHandle.\n");
         [self stop];
@@ -420,16 +384,12 @@ static void startCallback(void *userData)
         return;
     }
 #ifdef DEBUG
-    NSLog(@"Marker count = %d\n", [markers count]);
+    NSLog(@"Marker count = %lu\n", (unsigned long)[markers count]);
 #endif
 
     // Marker data has been loaded, so now load NFT data.
     [self loadNFTData];
-    
-    // Set up the virtual environment.
-    self.virtualEnvironment = [[[VirtualEnvironment alloc] initWithARViewController:self] autorelease];
-    [self.virtualEnvironment addObjectsFromObjectListFile:@"Data2/models.dat" connectToARMarkers:markers];
-    
+
     // Because in this example we're not currently assigning a world coordinate system
     // (we're just using local marker coordinate systems), set the camera pose now, to
     // the default (i.e. the identity matrix).
@@ -536,7 +496,7 @@ static void startCallback(void *userData)
             int              pageNo;
             
             if( detectedPage == -2 ) {
-                trackingInitStart( threadHandle, buffer->buffLuma );
+                trackingInitStart( threadHandle, buffer->buff );
                 detectedPage = -1;
             }
             if( detectedPage == -1 ) {
@@ -579,8 +539,7 @@ static void startCallback(void *userData)
         // Get current time (units = seconds).
         NSTimeInterval runLoopTimeNow;
         runLoopTimeNow = CFAbsoluteTimeGetCurrent();
-        [virtualEnvironment updateWithSimulationTime:(runLoopTimeNow - runLoopTimePrevious)];
-        
+       
         // The display has changed.
         [glView drawView:self];
         
@@ -594,9 +553,7 @@ static void startCallback(void *userData)
     int i;
     
     [self stopRunLoop];
-    
-    self.virtualEnvironment = nil;
-    
+
     [markers release];
     
     if (arglContextSettings) {
@@ -628,7 +585,9 @@ static void startCallback(void *userData)
 }
 
 - (void)viewWillDisappear:(BOOL)animated {
-    [self stop];
+    if (self.running)
+        [self stop];
+
     [super viewWillDisappear:animated];
 }
 

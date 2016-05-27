@@ -77,6 +77,8 @@ AR2ImageSetT *ar2GenImageSet( ARUint8 *image, int xsize, int ysize, int nc, floa
     return imageSet;
 }
 
+#include <unistd.h>
+
 AR2ImageSetT *ar2ReadImageSet( char *filename )
 {
     FILE          *fp;
@@ -95,6 +97,7 @@ AR2ImageSetT *ar2ReadImageSet( char *filename )
     len = strlen(filename) + strlen(ext) + 1; // +1 for nul terminator.
     arMalloc(buf, char, len);
     sprintf(buf, "%s%s", filename, ext);
+    
     fp = fopen(buf, "rb");
     free(buf);
     if (!fp) {

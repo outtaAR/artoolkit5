@@ -139,7 +139,7 @@ int arGetContour( AR_LABELING_LABEL_TYPE *limage, int xsize, int ysize, int *lab
     int        wx[AR_CHAIN_MAX];
     int        wy[AR_CHAIN_MAX];
     AR_LABELING_LABEL_TYPE   *p1;
-    int        sx, sy, dir;
+    int        sx = 0, sy = 0, dir;
     int        dmax, d, v1 = 0 /*COVHI10455*/;
     int        i, j;
 

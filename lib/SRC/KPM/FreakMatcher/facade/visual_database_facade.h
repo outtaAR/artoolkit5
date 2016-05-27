@@ -73,6 +73,8 @@ namespace vision {
         const size_t databaseCount();
         
         int matchedId() ;
+  
+        void setThreshold(float threshold, float delta);
         
         const float* matchedGeometry();
         

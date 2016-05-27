@@ -58,7 +58,10 @@ extern "C" {
     
 #define   KpmPose6DOF            1
 #define   KpmPoseHomography      2
-
+#define   defaultMatchThrehold   3.0f
+#define   defaultMatchDelta      1.0f
+#define   defaultErrorThreshold  10.0f
+    
 typedef enum {
     KpmProcFullSize        = 1,
     KpmProcHalfSize        = 2,
@@ -169,15 +172,16 @@ typedef struct _KpmHandle KpmHandle;
         valid for the lifetime of the KpmHandle.
         This structure also specifies the size of video frames which will be later supplied to the
         kpmMatching() function as cparamLT->param.xsize and cparamLT->param.ysize.
+    @param pixFormat Pixel format of video frames which will be later supplied to the kpmMatching() function.
     @result Pointer to a newly-allocated KpmHandle structure. This structure must be deallocated
         via a call to kpmDeleteHandle() when no longer needed.
     @seealso kpmCreateHandleHomography kpmCreateHandleHomography
     @seealso kpmDeleteHandle kpmDeleteHandle
  */
-KpmHandle  *kpmCreateHandle (ARParamLT *cparamLT);
+KpmHandle  *kpmCreateHandle ( ARParamLT *cparamLT, AR_PIXEL_FORMAT pixFormat );
 #define     kpmCreatHandle kpmCreateHandle
 
-KpmHandle  *kpmCreateHandle2(int xsize, int ysize);
+KpmHandle  *kpmCreateHandle2( int xsize, int ysize, AR_PIXEL_FORMAT pixFormat );
 #define     kpmCreatHandle2 kpmCreateHandle2
 
 /*!
@@ -189,12 +193,13 @@ KpmHandle  *kpmCreateHandle2(int xsize, int ysize);
         but the resulting pose is suitable for visual overlay purposes.
     @param xsize Width of video frames which will be later supplied to the kpmMatching() function.
     @param ysize Height of video frames which will be later supplied to the kpmMatching() function.
+    @param pixFormat Pixel format of video frames which will be later supplied to the kpmMatching() function.
     @result Pointer to a newly-allocated KpmHandle structure. This structure must be deallocated
         via a call to kpmDeleteHandle() when no longer needed.
     @seealso kpmCreateHandle kpmCreateHandle
     @seealso kpmDeleteHandle kpmDeleteHandle
  */
-KpmHandle  *kpmCreateHandleHomography(int xsize, int ysize);
+KpmHandle  *kpmCreateHandleHomography( int xsize, int ysize, AR_PIXEL_FORMAT pixFormat );
 #define     kpmCreatHandleHomography kpmCreateHandleHomography
 
 /*!
@@ -213,6 +218,11 @@ int         kpmDeleteHandle( KpmHandle **kpmHandle );
 
 int         kpmHandleGetXSize(const KpmHandle *kpmHandle);
 int         kpmHandleGetYSize(const KpmHandle *kpmHandle);
+AR_PIXEL_FORMAT kpmHandleGetPixelFormat(const KpmHandle *kpmHandle);
+    
+float       kpmHandleGetErrorThreshold(const KpmHandle *kpmHandle);
+int         kpmHandleSetErrorThreshold(KpmHandle *kpmHandle, float errorThreshold);
+int         kpmHandleSetMatchThreshold(KpmHandle *kpmHandle, float factor);
     
 int         kpmSetProcMode( KpmHandle *kpmHandle, KPM_PROC_MODE  procMode );
 int         kpmGetProcMode( KpmHandle *kpmHandle, KPM_PROC_MODE *procMode );
@@ -265,14 +275,14 @@ int         kpmSetRefDataSetFileOld( KpmHandle *kpmHandle, const char *filename,
     @abstract Perform key-point matching on an image.
     @discussion 
     @param kpmHandle
-    @param inImageLuma Source image containing the pixels which will be searched for features.
-        Typically, this is one frame from a video stream. The dimensions of this image must
-        match the values specified at the time of creation of the KPM handle. Luma only.
+    @param inImage Source image containing the pixels which will be searched for features.
+        Typically, this is one frame from a video stream. The dimensions and pixel format
+        of this image must match the values specified at the time of creation of the KPM handle.
     @result 0 if successful, or value &lt;0 in case of error.
     @seealso kpmCreateHandle kpmCreateHandle
     @seealso kpmCreateHandleHomography kpmCreateHandleHomography
  */
-int         kpmMatching(KpmHandle *kpmHandle, ARUint8 *inImageLuma);
+int         kpmMatching( KpmHandle *kpmHandle, ARUint8 *inImage );
 
 int         kpmSetMatchingSkipPage( KpmHandle *kpmHandle, int *skipPages, int num );
 #if !BINARY_FEATURE
@@ -285,12 +295,13 @@ int         kpmGetInDataSet( KpmHandle *kpmHandle, KpmInputDataSet **inDataSet )
 int         kpmGetMatchingResult( KpmHandle *kpmHandle, KpmMatchResult **preRANSAC, KpmMatchResult **aftRANSAC );
 #endif
 int         kpmGetPose( KpmHandle *kpmHandle, float  pose[3][4], int *pageNo, float  *error );
+int         kpmGetErrorThreshold( KpmHandle *kpmHandle, float *errorThreshold );
 int         kpmGetResult( KpmHandle *kpmHandle, KpmResult **result, int *resultNum );
 
 
-int         kpmGenRefDataSet ( ARUint8 *refImage, int xsize, int ysize, float  dpi, int procMode, int compMode, int maxFeatureNum,
+int         kpmGenRefDataSet ( ARUint8 *refImage, AR_PIXEL_FORMAT pixFormat, int xsize, int ysize, float  dpi, int procMode, int compMode, int maxFeatureNum,
                                int pageNo, int imageNo, KpmRefDataSet **refDataSet );
-int         kpmAddRefDataSet ( ARUint8 *refImage, int xsize, int ysize, float  dpi, int procMode, int compMode, int maxFeatureNum,
+int         kpmAddRefDataSet ( ARUint8 *refImage, AR_PIXEL_FORMAT pixFormat, int xsize, int ysize, float  dpi, int procMode, int compMode, int maxFeatureNum,
                                int pageNo, int imageNo, KpmRefDataSet **refDataSet );
 
 /*!
@@ -374,13 +385,14 @@ int         kpmChangePageNoOfRefDataSet ( KpmRefDataSet *refDataSet, int oldPage
     @function
     @abstract 
     @discussion 
-    @param imageLuma Source luminance image, as an unpadded pixel buffer beginning with the leftmost pixel of the top row.
-    @param xsize Width of pixel data in 'imageLuma'.
-    @param ysize height of pixel data in 'imageLuma'.
+    @param image Source image, as an unpadded pixel buffer beginning with the leftmost pixel of the top row.
+    @param pixFormat Layout of pixel data in 'image'.
+    @param xsize Layout of pixel data in 'image'.
+    @param ysize Layout of pixel data in 'image'.
     @param procMode
     @result 
  */
-ARUint8    *kpmUtilResizeImage( ARUint8 *imageLuma, int xsize, int ysize, int procMode, int *newXsize, int *newYsize );
+ARUint8    *kpmUtilGenBWImage( ARUint8 *image, AR_PIXEL_FORMAT pixFormat, int xsize, int ysize, int procMode, int *newXsize, int *newYsize );
 
 #if !BINARY_FEATURE
 int         kpmUtilGetPose ( ARParamLT *cparamLT, KpmMatchResult *matchData, KpmRefDataSet *refDataSet, KpmInputDataSet *inputDataSet, float  camPose[3][4], float  *err );
@@ -388,7 +400,7 @@ int         kpmUtilGetPose ( ARParamLT *cparamLT, KpmMatchResult *matchData, Kpm
 int         kpmUtilGetPose2( ARParamLT *cparamLT, KpmMatchResult *matchData, KpmRefDataSet *refDataSet, int *redDataIndex, KpmInputDataSet *inputDataSet, float  camPose[3][4], float  *error );
 int         kpmUtilGetPoseHomography( KpmMatchResult *matchData, KpmRefDataSet *refDataSet, KpmInputDataSet *inputDataSet, float  camPose[3][4], float  *err );
 #endif
-int         kpmUtilGetCorner( ARUint8 *inImagePtr, int xsize, int ysize, int procMode, int maxPointNum, CornerPoints *cornerPoints );
+int         kpmUtilGetCorner( ARUint8 *inImagePtr, AR_PIXEL_FORMAT pixFormat, int xsize, int ysize, int procMode, int maxPointNum, CornerPoints *cornerPoints );
 
 
 double wallclock();

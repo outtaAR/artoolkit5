@@ -51,7 +51,6 @@
 
 #include <AR/ar.h>
 #include <AR/videoConfig.h>
-#include <AR/videoLuma.h>
 #include <limits.h>
 
 #ifdef  __cplusplus
@@ -76,8 +75,7 @@ extern "C" {
 #define  AR_VIDEO_DEVICE_ANDROID            15
 #define  AR_VIDEO_DEVICE_WINDOWS_MEDIA_FOUNDATION 16
 #define  AR_VIDEO_DEVICE_WINDOWS_MEDIA_CAPTURE 17
-#define  AR_VIDEO_DEVICE_V4L2               18
-#define  AR_VIDEO_DEVICE_MAX                18
+#define  AR_VIDEO_DEVICE_MAX                17
 
 
 #define  AR_VIDEO_1394_BRIGHTNESS                      65
@@ -131,6 +129,31 @@ extern "C" {
 #define  AR_VIDEO_FOCUS_MODE_AUTO                     1
 #define  AR_VIDEO_FOCUS_MODE_POINT_OF_INTEREST        2
 #define  AR_VIDEO_FOCUS_MODE_MANUAL                   3
+
+/*!
+    @typedef
+    @asbtract Structure which carries information about a frame retrieved by the video library.
+    @field buff         A pointer to the packed video data for this video frame. The video data pixel
+                        format is as specified by arVideoGetPixelFormat(). For multi-planar frames,
+                        this pointer is a copy of bufPlanes[0].
+    @field bufPlanes    For multi-planar video frames, this must be an array of length bufPlaneCount
+                        of (ARUint8*), into which will be copied pointers to the packed video data
+                        for each plane. For single-plane formats, this will be NULL.
+    @field bufPlaneCount For multi-planar video frames, this is the number of frame planes. For
+                        single-plane formats, this will be 0.
+    @field fillFlag     Set non-zero when buff is valid.
+    @field time_sec     Seconds portion of the time at which buff was filled. Epoch is OS-specific.
+    @field time_usec    Microseconds portion of the time at which buff was filled. Epoch is OS-specific.
+    @seealso arVideoGetPixelFormat arVideoGetPixelFormat
+ */
+typedef struct {
+    ARUint8            *buff;
+    ARUint8           **bufPlanes;
+    unsigned int        bufPlaneCount;
+    int                 fillFlag;
+    ARUint32            time_sec;
+    ARUint32            time_usec;
+} AR2VideoBufferT;
 
 #define AR_VIDEO_POSITION_UNKNOWN     0x0000 // Camera physical position on device unknown.
 #define AR_VIDEO_POSITION_FRONT       0x0008 // Camera is on front of device pointing towards user.
@@ -197,9 +220,6 @@ typedef void (*AR_VIDEO_FRAME_READY_CALLBACK)(void *);
 #ifdef AR_INPUT_V4L
 #include <AR/sys/videoLinuxV4L.h>
 #endif
-#ifdef AR_INPUT_V4L2
-#include <AR/sys/videoLinuxV4L2.h>
-#endif
 #ifdef AR_INPUT_DV
 #include <AR/sys/videoLinuxDV.h>
 #endif
@@ -251,9 +271,6 @@ typedef union {
 #ifdef AR_INPUT_V4L
     AR2VideoParamV4LT           *v4l;
 #endif
-#ifdef AR_INPUT_V4L2
-    AR2VideoParamV4L2T          *v4l2;
-#endif
 #ifdef AR_INPUT_DV
     AR2VideoParamDVT            *dv;
 #endif
@@ -301,7 +318,6 @@ typedef union {
 typedef struct {
     int                    deviceType;
     AR2VideoDeviceHandleT  device;
-    ARVideoLumaInfo       *lumaInfo;
 } AR2VideoParamT;
 
 AR_DLL_API int               arVideoGetDefaultDevice(void);
@@ -314,7 +330,7 @@ AR_DLL_API int               arVideoGetId           (ARUint32 *id0, ARUint32 *id
 AR_DLL_API int               arVideoGetSize         (int *x, int *y);
 AR_DLL_API int               arVideoGetPixelSize    (void);
 AR_DLL_API AR_PIXEL_FORMAT   arVideoGetPixelFormat  (void);
-AR_DLL_API AR2VideoBufferT  *arVideoGetImage        (void);
+AR_DLL_API ARUint8          *arVideoGetImage        (void);
 AR_DLL_API int               arVideoCapStart        (void);
 AR_DLL_API int               arVideoCapStartAsync   (AR_VIDEO_FRAME_READY_CALLBACK callback, void *userdata);
 AR_DLL_API int               arVideoCapStop         (void);

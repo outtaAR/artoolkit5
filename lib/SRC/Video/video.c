@@ -48,8 +48,6 @@ int arVideoGetDefaultDevice( void )
 {
 #if defined(AR_DEFAULT_INPUT_V4L)
     return AR_VIDEO_DEVICE_V4L;
-#elif defined(AR_DEFAULT_INPUT_V4L2)
-    return AR_VIDEO_DEVICE_V4L2;
 #elif defined(AR_DEFAULT_INPUT_DV)
     return AR_VIDEO_DEVICE_DV;
 #elif defined(AR_DEFAULT_INPUT_1394CAM)
@@ -161,11 +159,17 @@ AR_PIXEL_FORMAT arVideoGetPixelFormat( void )
     return ar2VideoGetPixelFormat( vid );
 }
 
-AR2VideoBufferT *arVideoGetImage( void )
+ARUint8 *arVideoGetImage( void )
 {
+    AR2VideoBufferT *buffer;
+
     if( vid == NULL ) return NULL;
 
-    return ar2VideoGetImage(vid);
+    buffer = ar2VideoGetImage(vid);
+	if (buffer == NULL) return (NULL);
+    if( buffer->fillFlag == 0 ) return NULL;
+
+    return buffer->buff;
 }
 
 int arVideoCapStart( void )
