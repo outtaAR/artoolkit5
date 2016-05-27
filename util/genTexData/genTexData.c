@@ -68,6 +68,7 @@ static char                 exitcode = 255;
 #define EXIT(c) {exitcode=c;exit(c);}
 
 
+
 static void  usage( char *com );
 static int   readImageFromFile(const char *filename, ARUint8 **image_p, int *xsize_p, int *ysize_p, int *nc_p, float *dpi_p);
 //static int   setDPI( void );
