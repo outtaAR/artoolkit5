@@ -32,6 +32,9 @@
 //
 //  Author(s): Chris Broaddus
 //
+//  Modification to this file Copyright (c) 2016 Verizon.
+//   - Improved the NFT target data set generation to be faster.
+//
 
 #include "visual_database_facade.h"
 #include <matchers/visual_database-inline.h>

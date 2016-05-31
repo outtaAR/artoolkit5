@@ -33,6 +33,9 @@
  *
  *  Author(s): Hirokazu Kato
  *
+ * Modification to this file Copyright (c) 2016 Verizon.
+ *  - Improved the NFT target data set generation to be faster.
+ *
  */
 /*******************************************************
  *

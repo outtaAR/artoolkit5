@@ -32,6 +32,9 @@
  *  Copyright 2006-2015 ARToolworks, Inc. All rights reserved.
  *  Author(s): Hirokazu Kato, Philip Lamb
  *
+ * Modification to this file Copyright (c) 2016 Verizon.
+ *  - Improved the NFT target data set generation to be faster.
+ *
  */
 
 /*!
