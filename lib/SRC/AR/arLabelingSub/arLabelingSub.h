@@ -33,7 +33,7 @@
  *
  *  Author(s): Hirokazu Kato, Philip Lamb
  *
- * Modification to this file Copyright (c) 2016 Verizon.
+ * Modification to this file Copyright (c) 2016 Catalyst Foundry.
  *  - Improved the NFT target data set generation to be faster.
  *
  */
