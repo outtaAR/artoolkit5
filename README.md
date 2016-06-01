@@ -1,5 +1,5 @@
 #NOTE: the source code on the fork has been modified
- * Modification to this file Copyright (c) 2016 Verizon.  
+ * Modification to this file Copyright (c) 2016 Catalyst Foundry.  
 
 #Read me for ARToolKit
 
