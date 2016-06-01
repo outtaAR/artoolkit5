@@ -50,7 +50,7 @@
 //  Author(s): Philip Lamb
 //  Version: 2.0
 //
-//  Modification to this file Copyright (c) 2016 Verizon.
+//  Modification to this file Copyright (c) 2016 Catalyst Foundry.
 //   - Improved the integration between native iOS and ARToolkit library
 //
 

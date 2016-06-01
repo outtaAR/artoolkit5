@@ -31,7 +31,7 @@
  *  Copyright 2015 Daqri, LLC. All rights reserved.
  *  Copyright 2006-2015 ARToolworks, Inc. All rights reserved.
  *
- *  Modification to this file Copyright (c) 2016 Verizon.
+ *  Modification to this file Copyright (c) 2016 Catalyst Foundry.
  *   - Improved the integration between native iOS and ARToolkit library
  *
  *  Author(s): Hirokazu Kato, Philip Lamb

@@ -45,7 +45,7 @@
 //
 //  Author(s): Philip Lamb
 //
-//  Modification to this file Copyright (c) 2016 Verizon.
+//  Modification to this file Copyright (c) 2016 Catalyst Foundry.
 //   - Improved the integration between native iOS and ARToolkit library
 //
 #import "ARMarker.h"

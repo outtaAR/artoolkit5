@@ -33,7 +33,7 @@
  *  Copyright 2015 Daqri, LLC.
  *  Copyright 2011-2015 ARToolworks, Inc.
  *
- *  Modification to this file Copyright (c) 2016 Verizon.
+ *  Modification to this file Copyright (c) 2016 Catalyst Foundry.
  *   - Improved the integration between native iOS and ARToolkit library
  *
  *  Author(s): Philip Lamb
