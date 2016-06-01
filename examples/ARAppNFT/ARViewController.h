@@ -45,7 +45,9 @@
 //
 //  Author(s): Philip Lamb
 //
-
+//  Modification to this file Copyright (c) 2016 Verizon.
+//   - Improved the integration between native iOS and ARToolkit library
+//
 //
 // ARViewController is a subclass of UIViewController, and is the core interface
 // for insertion of an augmented reality view into an application.

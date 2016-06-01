@@ -45,7 +45,9 @@
 //
 //  Author(s): Philip Lamb
 //
-
+//  Modification to this file Copyright (c) 2016 Verizon.
+//   - Improved the integration between native iOS and ARToolkit library
+//
 //
 // ARMarker is the base class for all types of ARToolKit markers.
 // It encapsulates the operation of a single ARToolKit marker,

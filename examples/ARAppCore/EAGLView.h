@@ -50,7 +50,9 @@
 //  Author(s): Philip Lamb
 //  Version: 2.0
 //
-
+//  Modification to this file Copyright (c) 2016 Verizon.
+//   - Improved the integration between native iOS and ARToolkit library
+//
 //#import <UIKit/UIKit.h> // Using precompiled header.
 #import <OpenGLES/EAGL.h>
 

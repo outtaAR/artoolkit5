@@ -45,7 +45,9 @@
 //
 //  Author(s): Philip Lamb
 //
-
+//  Modification to this file Copyright (c) 2016 Verizon.
+//   - Improved the integration between native iOS and ARToolkit library
+//
 #import "ARViewController.h"
 #import <AR/gsub_es.h>
 #import "../ARAppCore/ARMarkerNFT.h"

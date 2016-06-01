@@ -29,6 +29,10 @@
  *  statement from your version.
  *
  *  Copyright 2015 Daqri, LLC. All rights reserved.
+ *
+ *  Modification to this file Copyright (c) 2016 Verizon.
+ *   - Improved the integration between native iOS and ARToolkit library
+ *
  *  Author(s): Philip Lamb
  *
  */

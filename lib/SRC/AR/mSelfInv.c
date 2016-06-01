@@ -31,6 +31,9 @@
  *  Copyright 2015 Daqri, LLC.
  *  Copyright 2002-2015 ARToolworks, Inc.
  *
+ *  Modification to this file Copyright (c) 2016 Verizon.
+ *   - Improved the integration between native iOS and ARToolkit library
+ *
  *  Author(s): Shinsaku Hiura, Hirokazu Kato, Philip Lamb
  *
  */

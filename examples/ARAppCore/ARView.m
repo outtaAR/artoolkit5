@@ -45,7 +45,9 @@
 //
 //  Author(s): Philip Lamb
 //
-
+//  Modification to this file Copyright (c) 2016 Verizon.
+//   - Improved the integration between native iOS and ARToolkit library
+//
 #import <QuartzCore/QuartzCore.h>
 #import "ARView.h"
 #import "ARViewController.h"

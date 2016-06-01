@@ -45,7 +45,9 @@
 //
 //  Author(s): Philip Lamb
 //
-
+//  Modification to this file Copyright (c) 2016 Verizon.
+//   - Improved the integration between native iOS and ARToolkit library
+//
 //
 // ARMarker encapsulates the operation of a single ARToolKit marker.
 // It provides methods for initialising and finalising the marker,

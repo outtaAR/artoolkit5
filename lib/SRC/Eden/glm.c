@@ -73,6 +73,10 @@
 //
 // @@END_EDEN_LICENSE_HEADER@@
 
+//  Modification to this file Copyright (c) 2016 Verizon.
+//   - Improved the integration between native iOS and ARToolkit library
+//
+
 #include <Eden/glm.h>
 #include <stdio.h>
 #include <stdlib.h>
