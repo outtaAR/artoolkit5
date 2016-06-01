@@ -1,3 +1,6 @@
+#NOTE: the source code on the fork has been modified
+ * Modification to this file Copyright (c) 2016 Verizon.  
+
 #Read me for ARToolKit
 
 ##Contents
